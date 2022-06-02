@@ -14,15 +14,25 @@
  * limitations under the License.
 */
 
+/// JVM types and type descriptors.
 pub mod descriptor;
+/// Readers and writes for different mapping formats.
 pub mod format;
+/// Definition of mapping visitors.
 pub mod visitor;
 
+/// The kind of a mappable element in a mapping file.
 pub enum MappedElementKind {
+    /// A class (includes interfaces, annotations, enums etc.).
+    /// Top-level and nested classes are not differentiated.
     Class,
+    /// A field.
     Field,
+    /// A method.
     Method,
+    /// A method's argument.
     MethodArg,
+    /// A method's local variable.
     MethodVar
 }
 
@@ -37,14 +47,5 @@ impl MappedElementKind {
             MappedElementKind::MethodArg => 2,
             MappedElementKind::MethodVar => 2,
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        let result = 2 + 2;
-        assert_eq!(result, 4);
     }
 }

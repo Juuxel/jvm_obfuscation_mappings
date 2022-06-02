@@ -17,6 +17,7 @@
 use std::collections::HashSet;
 use crate::MappedElementKind;
 
+/// The result of visiting mapping names, content or metadata.
 pub type VisitResult<T> = anyhow::Result<T>;
 
 /// Flags that describe the behaviour of a mapping visitor.
@@ -66,6 +67,7 @@ pub enum MappingFlag {
 /// The same element may be visited more than once unless the flags contain
 /// [`MappingFlag::NeedsUniqueness`].
 pub trait MappingVisitor {
+    /// Returns the flags describing this mapping visitor.
     fn flags(&self) -> HashSet<MappingFlag>;
 
     /// Reset the visitor including any chained visitors to allow for another independent visit (excluding visitEnd=false).
@@ -78,8 +80,15 @@ pub trait MappingVisitor {
         Ok(true)
     }
 
+    /// Visit the list of namespaces.
+    ///
+    /// `dst_namespaces` may be empty, which indicates a single-namespace mapping file.
     fn visit_namespaces(&mut self, src_namespace: &str, dst_namespaces: &[&str]) -> VisitResult<()>;
 
+    /// Visits a metadata property.
+    ///
+    /// Some mapping formats allow you to add a set of key-value properties
+    /// which will be passed to this method.
     fn visit_metadata(&mut self, key: &str, value: &str) -> VisitResult<()> {
         Ok(())
     }
@@ -91,10 +100,29 @@ pub trait MappingVisitor {
         Ok(true)
     }
 
+    /// Visits a class and its source name.
+    ///
+    /// The result describes whether the rest of the class (destination names, members and comments) should be read.
     fn visit_class(&mut self, src_name: &str) -> VisitResult<bool>;
+    
+    /// Visits a field and its source name and descriptor.
+    ///
+    /// The result describes whether the rest of the field (destination names and comments) should be read.
     fn visit_field(&mut self, src_name: &str, src_desc: Option<&str>) -> VisitResult<bool>;
+
+    /// Visits a method and its source name and descriptor.
+    ///
+    /// The result describes whether the rest of the method (destination names, variables, arguments and comments) should be read.
     fn visit_method(&mut self, src_name: &str, src_desc: Option<&str>) -> VisitResult<bool>;
+
+    /// Visits a method argument and its source name and indices.
+    ///
+    /// The result describes whether the rest of the argument (destination names and comments) should be read.
     fn visit_method_arg(&mut self, arg_position: i32, lv_index: i32, src_name: Option<&str>) -> VisitResult<bool>;
+
+    /// Visits a method local variable and its source name and indices.
+    ///
+    /// The result describes whether the rest of the variable (destination names and comments) should be read.
     fn visit_method_var(&mut self, lvt_row_index: i32, lv_index: i32, start_op_idx: i32, src_name: Option<&str>) -> VisitResult<bool>;
 
     /// Finish the visitation pass.
@@ -104,12 +132,16 @@ pub trait MappingVisitor {
         Ok(true)
     }
 
-    /// Destination name for the current element.
+    /// Visits the destination name for the current element.
     ///
     /// `namespace` is the namespace index or index into the `dst_namespaces` list
     /// in [`Self::visit_namespaces`].
     fn visit_dst_name(&mut self, target_kind: MappedElementKind, namespace: usize, name: &str) -> VisitResult<()>;
 
+    /// Visits the destination descriptor for the current element.
+    ///
+    /// `namespace` is the namespace index or index into the `dst_namespaces` list
+    /// in [`Self::visit_namespaces`].
     fn visit_dst_desc(&mut self, target_kind: MappedElementKind, namespace: usize, desc: &str) -> VisitResult<()> {
         Ok(())
     }
@@ -122,7 +154,7 @@ pub trait MappingVisitor {
     /// This is also a notification about all available dst names having been passed on.
     fn visit_element_content(&mut self, target_kind: MappedElementKind) -> VisitResult<bool>;
 
-    /// Comment for the specified element (last content-visited or any parent).
+    /// Visits the comment for the specified element (last content-visited or any parent).
     /// The `comment` can potentially be a multi-line string.
     fn visit_comment(&mut self, target_kind: MappedElementKind, comment: &str) -> VisitResult<()>;
 }
