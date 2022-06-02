@@ -17,15 +17,21 @@
 use std::collections::HashSet;
 use anyhow::anyhow;
 use crate::MappedElementKind;
-use crate::visitor::{MappingFlag, VisitResult};
+use crate::visitor::{MappingFlag, MappingVisitor, VisitResult};
 
 // TODO: escape_names
+/// A Tiny v2 writer as a [`MappingVisitor`] that outputs to [`std::fmt::Write`].
 pub struct Tiny2Writer<W: std::fmt::Write> {
     write: W,
     dst_names: Vec<Option<String>>,
 }
 
 impl<W: std::fmt::Write> Tiny2Writer<W> {
+    /// Creates a new Tiny v2 writer.
+    pub fn new(write: W) -> Tiny2Writer<W> {
+        Tiny2Writer { write, dst_names: Vec::new(), }
+    }
+
     fn write_tab(&mut self) -> VisitResult<()> {
         self.write.write_char('\t')?;
         Ok(())
@@ -37,7 +43,7 @@ impl<W: std::fmt::Write> Tiny2Writer<W> {
     }
 }
 
-impl<W: std::fmt::Write> crate::visitor::MappingVisitor for Tiny2Writer<W> {
+impl<W: std::fmt::Write> MappingVisitor for Tiny2Writer<W> {
     fn flags(&self) -> HashSet<MappingFlag> {
         HashSet::from(
             [MappingFlag::NeedsHeaderMetadata, MappingFlag::NeedsUniqueness, MappingFlag::NeedsSrcFieldDesc, MappingFlag::NeedsSrcMethodDesc]
