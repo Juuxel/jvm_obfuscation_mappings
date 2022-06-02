@@ -18,7 +18,7 @@ use std::fmt;
 use crate::descriptor::ClassName;
 
 /// A JVM type.
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Type {
     /// A named object type (`L<class name>;`).
     Object(ClassName),
@@ -107,6 +107,41 @@ impl Type {
             Type::Boolean => "boolean".to_owned(),
             Type::Char => "char".to_owned(),
             Type::Void => "void".to_owned(),
+        }
+    }
+
+    /// Returns an array type containing this type as its element type.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use jvm_obfuscation_mappings::descriptor::ClassName;
+    ///
+    /// let string = ClassName::from_binary_name("java.lang.String").to_type();
+    /// assert_eq!(string.array().java_name(), String::from("java.lang.String[]"));
+    /// assert_eq!(string.array().array().array().java_name(), String::from("java.lang.String[][][]"));
+    /// ```
+    pub fn array(&self) -> Self {
+        Type::Array(Box::new(self.clone()))
+    }
+
+    /// Returns the depth of array layers in this type.
+    ///
+    /// All non-array types return 0. Arrays return 1 + their element type's array depth.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use jvm_obfuscation_mappings::descriptor::ClassName;
+    ///
+    /// let string = ClassName::from_binary_name("java.lang.String").to_type();
+    /// assert_eq!(string.array_depth(), 0);
+    /// assert_eq!(string.array().array().array().array_depth(), 3);
+    /// ```
+    pub fn array_depth(&self) -> u32 {
+        match self {
+            Type::Array(element_type) => 1 + element_type.array_depth(),
+            _ => 0,
         }
     }
 }

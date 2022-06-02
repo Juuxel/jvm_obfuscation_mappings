@@ -15,6 +15,7 @@
 */
 
 use std::fmt;
+use crate::descriptor::Type;
 
 /// A JVM class name.
 ///
@@ -44,7 +45,7 @@ use std::fmt;
 ///
 /// You can also convert directly to a specified output format using [`internal_name`][Self::internal_name]
 /// or [`binary_name`][Self::binary_name].
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ClassName {
     internal_name: String,
 }
@@ -106,6 +107,20 @@ impl ClassName {
     /// ```
     pub fn binary_name(&self) -> String {
         self.internal_name.replace('/', ".")
+    }
+
+    /// Returns a [`Type`] representing an object type with this class name.
+    ///
+    /// # Examples
+    /// 
+    /// ```
+    /// use jvm_obfuscation_mappings::descriptor::{ClassName, Type};
+    ///
+    /// let name = ClassName::from_internal_name("java/lang/String");
+    /// assert_eq!(name.to_type(), Type::Object(name));
+    /// ```
+    pub fn to_type(&self) -> Type {
+        Type::Object(self.clone())
     }
 }
 
