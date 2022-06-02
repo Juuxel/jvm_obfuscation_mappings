@@ -17,7 +17,7 @@
 use std::fmt;
 use crate::descriptor::ClassName;
 
-// A JVM type.
+/// A JVM type.
 #[derive(Debug)]
 pub enum Type {
     /// A named object type (`L<class name>;`).
